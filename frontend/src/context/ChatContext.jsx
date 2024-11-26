@@ -19,8 +19,28 @@ export const ChatProvider = ({ children }) => {
     const { user } = useAuth();
     const { fetchFriends, fetchPendingRequests } = useFriend();
 
-
-
+         // New useEffect to handle window focus
+         useEffect(() => {
+            const handleFocus = () => {
+                if (socket) {
+                    socket.emit('user_active');
+                }
+            };
+        
+            const handleBlur = () => {
+                if (socket) {
+                    socket.emit('user_inactive');
+                }
+            };
+        
+            window.addEventListener('focus', handleFocus);
+            window.addEventListener('blur', handleBlur);
+        
+            return () => {
+                window.removeEventListener('focus', handleFocus);
+                window.removeEventListener('blur', handleBlur); 
+            };
+        }, [socket]);
 
         const handleEditMessage = async (messageId, newContent) => {
             try {

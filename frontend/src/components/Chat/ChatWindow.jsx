@@ -104,6 +104,20 @@ export default function ChatWindow() {
             toast.error('Failed to delete message');
         }
     };
+
+    useEffect(() => {
+        const handleFocus = () => {
+            if (socket) {
+                socket.emit('user_active');
+            }
+        };
+    
+        window.addEventListener('focus', handleFocus);
+    
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [socket]);
   
 
     if (loading) return <div className="flex-1 flex justify-center items-center"><LoadingSpinner /></div>;
