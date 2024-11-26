@@ -7,7 +7,7 @@ const Message = require('../models/messageModel');
 const setupSocket = (server) => {
     const io = socketIO(server, {
         cors: {
-            origin: "http://localhost:5175",
+            origin: "http://localhost:5174",
             methods: ["GET", "POST"]
         }
     });
@@ -40,7 +40,7 @@ const setupSocket = (server) => {
     });
 
     io.on('connection', async (socket) => {
-        console.log('User connected:', socket.user.username);
+        // console.log('User connected:', socket.user.username);
         
         // Update user's online status
         await User.findByIdAndUpdate(socket.user._id, {
@@ -136,8 +136,50 @@ const setupSocket = (server) => {
             }
         });
 
+// Listen for 'user_active' event
+socket.on('user_active', async () => {
+    // Update user's online status
+    await User.findByIdAndUpdate(socket.user._id, {
+        'status.isOnline': true,
+        lastSeen: new Date()
+    });
+
+    // Add to online users
+    onlineUsers.set(socket.user._id.toString(), socket.id);
+    
+    // Broadcast online status
+    io.emit('user_status_change', {
+        userId: socket.user._id,
+        isOnline: true,
+        lastSeen: new Date()
+    });
+});
+
+// Listen for 'user_inactive' event
+socket.on('user_inactive', async () => {
+    // Update user's offline status
+    await User.findByIdAndUpdate(socket.user._id, {
+        'status.isOnline': false,
+        lastSeen: new Date()
+    });
+    
+    // Broadcast offline status
+    io.emit('user_status_change', {
+        userId: socket.user._id,
+        isOnline: false,
+        lastSeen: new Date()
+    });
+});
+        
+        
+
+
+
         // Handle disconnection
         socket.on('disconnect', async () => {
+
+
+            console.log('User disconnected:', socket.user.username);
             // Clear typing timeout
             if (typingUsers.has(socket.user._id)) {
                 clearTimeout(typingUsers.get(socket.user._id));
