@@ -47,7 +47,7 @@ const getChatHistory = asyncHandler(async (req, res) => {
         }
     });
 
-    console.log('Fetched messages:', messages);
+   
 
     await Message.updateMany(
         {
