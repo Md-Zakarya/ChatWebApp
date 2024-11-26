@@ -6,6 +6,7 @@ import { useFriend } from '../../context/FriendContext';
 import { toast } from 'react-toastify';
 import api from '../../services/axios';
 import LoadingSpinner from '../LoadingSpinner';
+import ProfileEdit from '../Profile/ProfileEdit';
 
 export default function UsersList() {
     const { onlineUsers, setSelectedUser, selectedUser, unreadCounts, setUnreadCounts } = useChat();
@@ -15,6 +16,7 @@ export default function UsersList() {
     const [searchResults, setSearchResults] = useState([]);
     const [searching, setSearching] = useState(false);
     const [requestInProgress, setRequestInProgress] = useState({});
+    const [showProfileModal, setShowProfileModal] = useState(false);
 
     const handleSearch = async () => {
         if (!searchTerm) return;
@@ -50,6 +52,26 @@ export default function UsersList() {
 
     return (
         <div className="w-80 flex flex-col border-r bg-white">
+         {/* Add profile section at top */}
+        <div className="p-4 border-b flex items-center justify-between">
+            <div className="flex items-center">
+                <img
+                    src={user?.avatar || '/default-avatar.png'}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full mr-3"
+                />
+                <span className="font-medium">{user?.username}</span>
+            </div>
+            <button
+                onClick={() => setShowProfileModal(true)}
+                className="text-gray-600 hover:text-gray-800"
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+            </button>
+        </div>
+            
             <div className="p-4 border-b">
                 <div className="flex mb-4">
                     <input
@@ -163,6 +185,13 @@ export default function UsersList() {
                     ))}
                 </div>
             </div>
+
+
+
+            {/* Add ProfileEdit modal */}
+        {showProfileModal && (
+            <ProfileEdit onClose={() => setShowProfileModal(false)} />
+        )}
         </div>
     );
 }

@@ -56,6 +56,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    //update the user profile
+  // frontend/src/context/AuthContext.jsx
+const updateProfile = async (userData) => {
+    try {
+        console.log('Updating profile with data:', userData);
+        
+        const { data } = await api.put('/auth/profile', userData);
+        
+        console.log('Profile update successful:', data);
+        setUser(data);
+        localStorage.setItem('user', JSON.stringify(data));
+    } catch (error) {
+        console.error('Profile update failed:', error);
+        throw error;
+    }
+};
+
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
@@ -82,7 +99,8 @@ export const AuthProvider = ({ children }) => {
                 register, 
                 login, 
                 logout,
-                validateToken 
+                validateToken,
+                updateProfile 
             }}
         >
             {children}
