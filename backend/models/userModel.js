@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema({
     },
     avatar: {
         type: String,
-        default: ''
+        default: '', // Empty string instead of default image path
+        maxLength: 5242880 // Max 5MB
     },
     status: {
         text: {
