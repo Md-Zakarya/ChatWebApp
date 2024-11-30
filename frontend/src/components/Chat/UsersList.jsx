@@ -1,5 +1,4 @@
-// frontend/src/components/Chat/UsersList.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useFriend } from '../../context/FriendContext';
@@ -11,12 +10,15 @@ import ProfileEdit from '../Profile/ProfileEdit';
 export default function UsersList() {
     const { onlineUsers, setSelectedUser, selectedUser, unreadCounts, setUnreadCounts } = useChat();
     const { user } = useAuth();
-    const { friends, pendingRequests, loading: friendsLoading, sendFriendRequest, respondToRequest } = useFriend();
+    const { friends, pendingRequests, loading: friendsLoading, sendFriendRequest, respondToRequest, removeFriend } = useFriend();
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searching, setSearching] = useState(false);
     const [requestInProgress, setRequestInProgress] = useState({});
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const [showRemoveModal, setShowRemoveModal] = useState(false);
+    const [friendToRemove, setFriendToRemove] = useState(null);
+    const [dropdownOpen, setDropdownOpen] = useState(null);
 
     const handleSearch = async () => {
         if (!searchTerm) return;
@@ -41,10 +43,17 @@ export default function UsersList() {
             await sendFriendRequest(userId);
             setSearchResults(prev => prev.filter(user => user._id !== userId));
         } catch (error) {
-            
-            // No additional error handling needed here
+            // Error handling is managed in context
         } finally {
             setRequestInProgress(prev => ({ ...prev, [userId]: false }));
+        }
+    };
+
+    const handleRemoveFriend = async () => {
+        if (friendToRemove) {
+            await removeFriend(friendToRemove);
+            setShowRemoveModal(false);
+            setFriendToRemove(null);
         }
     };
 
@@ -52,26 +61,21 @@ export default function UsersList() {
 
     return (
         <div className="w-80 flex flex-col border-r bg-white">
-         {/* Add profile section at top */}
-        <div className="p-4 border-b flex items-center justify-between">
-            <div className="flex items-center">
-                <img
-                    src={user?.avatar || '/default-avatar.png'}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full mr-3"
-                />
-                <span className="font-medium">{user?.username}</span>
+            {/* Add profile section at top */}
+            <div className="p-4 border-b flex items-center justify-between">
+                <div className="flex items-center">
+                    <img
+                        src={user.avatar || '/default-avatar.png'}
+                        alt={user.username}
+                        className="w-10 h-10 rounded-full"
+                    />
+                    <span className="ml-2 font-semibold">{user.username}</span>
+                </div>
+                <button onClick={() => setShowProfileModal(true)}>
+                    Edit
+                </button>
             </div>
-            <button
-                onClick={() => setShowProfileModal(true)}
-                className="text-gray-600 hover:text-gray-800"
-            >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-            </button>
-        </div>
-            
+
             <div className="p-4 border-b">
                 <div className="flex mb-4">
                     <input
@@ -115,60 +119,56 @@ export default function UsersList() {
                         </div>
                     </div>
                 )}
-
-                {/* Pending Requests */}
-                {pendingRequests.length > 0 && (
-                    <div className="mb-4">
-                        <h3 className="text-sm font-semibold text-gray-500 mb-2">Friend Requests</h3>
-                        <div className="space-y-2">
-                            {pendingRequests.map(request => (
-                                <div key={request.from._id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                    <span>{request.from.username}</span>
-                                    <div className="space-x-2">
-                                        <button
-                                            onClick={() => respondToRequest(request.from._id, 'accepted')}
-                                            className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                                        >
-                                            Accept
-                                        </button>
-                                        <button
-                                            onClick={() => respondToRequest(request.from._id, 'rejected')}
-                                            className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                                        >
-                                            Reject
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
+
+            {/* Pending Requests */}
+            {pendingRequests.length > 0 && (
+                <div className="mb-4 p-4 border-b">
+                    <h3 className="text-sm font-semibold text-gray-500 mb-2">Friend Requests</h3>
+                    <div className="space-y-2">
+                        {pendingRequests.map(request => (
+                            <div key={request.from._id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <span>{request.from.username}</span>
+                                <div className="space-x-2">
+                                    <button
+                                        onClick={() => respondToRequest(request.from._id, 'accepted')}
+                                        className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        Accept
+                                    </button>
+                                    <button
+                                        onClick={() => respondToRequest(request.from._id, 'rejected')}
+                                        className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Friends List */}
             <div className="flex-1 overflow-y-auto">
                 <div className="p-4">
                     <h3 className="text-sm font-semibold text-gray-500 mb-2">Friends</h3>
                     {friends.map(friend => (
-                        <button
-                        key={friend._id}
-                        onClick={() => {
-                            setSelectedUser(friend._id);
-                            setUnreadCounts(prev => ({ ...prev, [friend._id]: 0 }));  // Reset count immediately
-                        }}
-                        className={`w-full p-4 flex items-center space-x-3 hover:bg-gray-50 ${
-                            selectedUser === friend._id ? 'bg-indigo-50' : ''
-                        }`}
-                    >
+                        <div
+                            key={friend._id}
+                            onClick={() => {
+                                setSelectedUser(friend._id);
+                                setUnreadCounts(prev => ({ ...prev, [friend._id]: 0 }));
+                            }}
+                            className={`w-full p-4 flex items-center space-x-3 hover:bg-gray-50 ${selectedUser === friend._id ? 'bg-indigo-50' : ''}`}
+                        >
                             <div className="relative">
                                 <img
                                     src={friend.avatar || '/default-avatar.png'}
                                     alt={friend.username}
                                     className="w-12 h-12 rounded-full"
                                 />
-                                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                                    onlineUsers[friend._id]?.isOnline ? 'bg-green-500' : 'bg-gray-500'
-                                }`} />
+                                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${onlineUsers[friend._id]?.isOnline ? 'bg-green-500' : 'bg-gray-500'}`} />
                             </div>
                             <div className="flex-1 text-left">
                                 <div className="font-medium">{friend.username}</div>
@@ -181,17 +181,65 @@ export default function UsersList() {
                                     {unreadCounts[friend._id]}
                                 </span>
                             )}
-                        </button>
+                            <div className="relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDropdownOpen(dropdownOpen === friend._id ? null : friend._id);
+                                    }}
+                                    className="ml-2 px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+                                >
+                                    ⋮
+                                </button>
+                                {dropdownOpen === friend._id && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-10">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFriendToRemove(friend._id);
+                                                setShowRemoveModal(true);
+                                                setDropdownOpen(null);
+                                            }}
+                                            className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-100"
+                                        >
+                                            Remove Friend
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     ))}
                 </div>
             </div>
 
-
-
             {/* Add ProfileEdit modal */}
-        {showProfileModal && (
-            <ProfileEdit onClose={() => setShowProfileModal(false)} />
-        )}
+            {showProfileModal && (
+                <ProfileEdit onClose={() => setShowProfileModal(false)} />
+            )}
+
+            {/* Add Remove Friend Confirmation Modal */}
+            {showRemoveModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-lg">
+                        <h3 className="text-lg font-semibold mb-4">Remove Friend</h3>
+                        <p>Are you sure you want to remove this friend?</p>
+                        <div className="mt-4 flex justify-end space-x-2">
+                            <button
+                                onClick={() => setShowRemoveModal(false)}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleRemoveFriend}
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

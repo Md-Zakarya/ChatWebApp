@@ -14,6 +14,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { useAuth } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { SocketProvider } from './context/SocketContext';
 
 
 function AppRoutes() {
@@ -40,29 +41,31 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-        <ErrorBoundary>
-            <AuthProvider>
-                <FriendProvider>
-                    <ChatProvider>
-                        <Layout>
-                            <AppRoutes />
-                        </Layout>
-                        <ToastContainer 
-                                 position="top-right"
-                                 autoClose={3000}
-                                 hideProgressBar={false}
-                                 newestOnTop
-                                 closeOnClick
-                                 rtl={false}
-                                 pauseOnFocusLoss
-                                 draggable
-                                 pauseOnHover
-                            />
-                    </ChatProvider>
-                </FriendProvider>
-            </AuthProvider>
-        </ErrorBoundary>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SocketProvider>
+          <FriendProvider>
+            <ChatProvider>
+              <Layout>
+                <AppRoutes />
+              </Layout>
+              <ToastContainer 
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+            </ChatProvider>
+          </FriendProvider>
+        </SocketProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  </BrowserRouter>
 );
 }
 

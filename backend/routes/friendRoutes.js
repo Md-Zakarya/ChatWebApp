@@ -6,12 +6,15 @@ const {
     sendFriendRequest,
     respondToFriendRequest,
     getFriends,
-    getPendingRequests
+    getPendingRequests,
+    removeFriend
 } = require('../controllers/friendController');
+
 
 router.post('/request/:userId', protect, sendFriendRequest);
 router.put('/request/:userId', protect, respondToFriendRequest);
 router.get('/', protect, getFriends);
+router.delete('/:userId', protect, removeFriend);
 router.get('/requests', protect, getPendingRequests);
 
 module.exports = router;

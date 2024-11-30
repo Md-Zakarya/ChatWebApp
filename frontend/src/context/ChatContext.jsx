@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import api from '../services/axios';
 import { toast } from 'react-toastify';
-import { useFriend } from './FriendContext'
+import { useFriend } from './FriendContext';
 
 const ChatContext = createContext();
 const SELECTED_USER_KEY = 'selectedChatUser';
@@ -18,136 +18,84 @@ export const ChatProvider = ({ children }) => {
     const [unreadCounts, setUnreadCounts] = useState({});
     const { user } = useAuth();
     const { fetchFriends, fetchPendingRequests } = useFriend();
+    const [friendRemoved, setFriendRemoved] = useState(false);
 
-         // New useEffect to handle window focus
-         useEffect(() => {
-            const handleFocus = () => {
-                if (socket) {
-                    socket.emit('user_active');
-                }
-            };
-        
-            const handleBlur = () => {
-                if (socket) {
-                    socket.emit('user_inactive');
-                }
-            };
-        
-            window.addEventListener('focus', handleFocus);
-            window.addEventListener('blur', handleBlur);
-        
-            return () => {
-                window.removeEventListener('focus', handleFocus);
-                window.removeEventListener('blur', handleBlur); 
-            };
-        }, [socket]);
+    // Window focus handling
+    useEffect(() => {
+        if (!socket) return;
 
-        const handleEditMessage = async (messageId, newContent) => {
-            try {
-                const { data } = await api.put(`/messages/${messageId}`, { content: newContent });
-                
-                setMessages(prev =>
-                    prev.map(msg => (msg._id === messageId ? data : msg))
-                );
+        const handleFocus = () => socket.emit('user_active');
+        const handleBlur = () => socket.emit('user_inactive');
         
-                // Emit to socket with receiver ID
-                if (socket && selectedUser) {
-                    socket.emit('edit_message', { 
-                        messageId, 
-                        newContent,
-                        receiverId: selectedUser 
-                    });
-                }
-            } catch (error) {
-                toast.error(error.response?.data?.message || 'Error editing message');
-                throw error;
-            }
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('blur', handleBlur);
+        
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+            window.removeEventListener('blur', handleBlur);
         };
-    
-        const handleDeleteMessage = async (messageId) => {
-            try {
-                const { data } = await api.delete(`/messages/${messageId}`);
+    }, [socket]);
 
-                setMessages(prev =>
-                    prev.map(msg => (msg._id === messageId ? data : msg))
-                );
 
-                // Emit to socket with receiver ID
-                if (socket && selectedUser) {
-                    socket.emit('delete_message', { 
-                        messageId,
-                        receiverId: selectedUser 
-                    });
-                }
-            } catch (error) {
-                toast.error(error.response?.data?.message || 'Error deleting message');
-                throw error;
-            }
-        };
+    useEffect(() => {
+        console.log('friendRemoved changed:', friendRemoved);
+      }, [friendRemoved]);
 
-            useEffect(() => {
-                if (!user) return;
+    // Socket initialization and main event listeners
+    useEffect(() => {
+        if (!user) return;
 
-                const newSocket = io('http://localhost:5000', {
-                    auth: { token: user.token },
-                });
+        const newSocket = io('http://localhost:5000', {
+            auth: { token: user.token },
+        });
 
-            setSocket(newSocket);
+        setSocket(newSocket);
 
-            // User status events
-            newSocket.on('user_status_change', ({ userId, isOnline, lastSeen }) => {
-                setOnlineUsers(prev => ({
+        // User status events
+        newSocket.on('user_status_change', ({ userId, isOnline, lastSeen }) => {
+            setOnlineUsers(prev => ({
+                ...prev,
+                [userId]: { isOnline, lastSeen },
+            }));
+        });
+
+        // Message events
+        newSocket.on('message_sent', message => {
+            setMessages(prev => [...prev, message]);
+        });
+
+        newSocket.on('receive_message', message => {
+            setMessages(prev => [...prev, message]);
+            if (selectedUser !== message.sender._id) {
+                setUnreadCounts(prev => ({
                     ...prev,
-                    [userId]: { isOnline, lastSeen },
+                    [message.sender._id]: (prev[message.sender._id] || 0) + 1,
                 }));
-            });
-
-            // Load messages for selected user when socket connects
-            if (selectedUser) {
-                fetchMessages(selectedUser);
+            } else {
+                newSocket.emit('message_read', {
+                    messageId: message._id,
+                    senderId: message.sender._id,
+                });
             }
+        });
 
-            // Message events
-            newSocket.on('message_sent', (message) => {
-                setMessages(prev => [...prev, message]);
-            });
+        newSocket.on('message_status_update', ({ messageId, status }) => {
+            setMessages(prev =>
+                prev.map(msg => (msg._id === messageId ? { ...msg, status } : msg))
+            );
+        });
 
-            newSocket.on('receive_message', (message) => {
-                setMessages(prev => [...prev, message]);
-                if (selectedUser !== message.sender._id) {
-                    setUnreadCounts(prev => ({
-                        ...prev,
-                        [message.sender._id]: (prev[message.sender._id] || 0) + 1,
-                    }));
-                } else {
-                    newSocket.emit('message_read', {
-                        messageId: message._id,
-                        senderId: message.sender._id,
-                    });
-                }
-            });
+        // Message modification events
+        newSocket.on('message_edited', ({ messageId, newContent }) => {
+            setMessages(prev =>
+                prev.map(msg =>
+                    msg._id === messageId
+                        ? { ...msg, content: newContent, isEdited: true }
+                        : msg
+                )
+            );
+        });
 
-            newSocket.on('message_status_update', ({ messageId, status }) => {
-                setMessages(prev =>
-                    prev.map(msg => (msg._id === messageId ? { ...msg, status } : msg))
-                );
-            });
-
-        // Update message event handlers
-    // Update message event handlers
-    newSocket.on('message_edited', ({ messageId, newContent }) => {
-        setMessages(prev =>
-            prev.map(msg =>
-                msg._id === messageId
-                    ? { ...msg, content: newContent, isEdited: true }
-                    : msg
-            )
-        );
-    });
-
-
-
-        // Message delete handler
         newSocket.on('message_deleted', ({ messageId }) => {
             setMessages(prev =>
                 prev.map(msg =>
@@ -158,98 +106,165 @@ export const ChatProvider = ({ children }) => {
             );
         });
 
+        newSocket.on('message_reaction_update', ({ messageId, reactions }) => {
+            setMessages(prev =>
+                prev.map(msg =>
+                    msg._id === messageId ? { ...msg, reactions } : msg
+                )
+            );
+        });
 
-            newSocket.on('message_reaction_update', ({ messageId, reactions }) => {
-                setMessages(prev =>
-                    prev.map(msg =>
-                        msg._id === messageId ? { ...msg, reactions } : msg
-                    )
-                );
-            });
+        // Friend-related events
+        newSocket.on('friend_request_received', data => {
+            toast.info(`New friend request from ${data.username}`);
+            fetchPendingRequests();
+        });
 
-            // Typing status events
-            newSocket.on('typing_status', ({ userId, isTyping }) => {
-                setTypingUsers(prev => {
-                    const newSet = new Set(prev);
-                    if (isTyping) {
-                        newSet.add(userId);
-                    } else {
-                        newSet.delete(userId);
-                    }
-                    return newSet;
-                });
-            });
+        newSocket.on('friend_request_response', data => {
+            toast.info(`Friend request ${data.accepted ? 'accepted' : 'rejected'}`);
+            fetchFriends();
+        });
 
-            // Friend request events
-            newSocket.on('friend_request_received', (data) => {
-                toast.info(`New friend request from ${data.username}`);
-                fetchPendingRequests();
-            });
+        newSocket.on('friend_request_accepted', data => {
+            toast.success(`${data.username} accepted your friend request`);
+            fetchFriends();
+        });
 
-            newSocket.on('friend_request_updated', (data) => {
-                toast.info(`Friend request ${data.accepted ? 'accepted' : 'rejected'}`);
+        
+        newSocket.on('friend_removed', ({ username, userId }) => {
+            toast.info(`${username} removed you from their friends list`);
+            // console.log('Now in friend_removed state');
+            // console.log('selectedUser:', selectedUser, 'userId:', userId);
+            if (selectedUser === userId) {
+                // console.log('selectedUser was equal to userId');
+                setFriendRemoved(true); // Set to true when removed
+                console.log('Changed the value of friendRemoved to:', friendRemoved);
+                setMessages([]); // Clear messages
+            }
+            setTimeout(() => {
                 fetchFriends();
+            }, 5000);
+        });
+
+        if (selectedUser) {
+            setFriendRemoved(false);
+        }
+
+
+        // Typing status
+        newSocket.on('typing_status', ({ userId, isTyping }) => {
+            setTypingUsers(prev => {
+                const newSet = new Set(prev);
+                if (isTyping) {
+                    newSet.add(userId);
+                } else {
+                    newSet.delete(userId);
+                }
+                return newSet;
             });
+        });
 
-            // Error handling
-            newSocket.on('connect_error', (error) => {
-                console.error('Socket connection error:', error);
-                toast.error('Connection error. Please check your internet connection.');
-            });
+        // Error handling
+        newSocket.on('connect_error', error => {
+            console.error('Socket connection error:', error);
+            toast.error('Connection error. Please check your internet connection.');
+        });
 
-            // Cleanup function
-            return () => {
-                newSocket.off('user_status_change');
-                newSocket.off('message_sent');
-                newSocket.off('receive_message');
-                newSocket.off('message_status_update');
-                newSocket.off('message_edited');
-                newSocket.off('message_deleted');
-                newSocket.off('message_reaction_update');
-                newSocket.off('typing_status');
-                newSocket.off('friend_request_received');
-                newSocket.off('friend_request_updated');
-                newSocket.off('connect_error');
-                
-                newSocket.close();
-            };
-        }, [user, selectedUser, fetchPendingRequests, fetchFriends, selectedUser]);
+        // Load messages for selected user when socket connects
+        if (selectedUser) {
+            fetchMessages(selectedUser);
+        }
 
-        // Reset unread messages for a user
-        useEffect(() => {
-            if (selectedUser && socket && messages.length > 0) {
-            const unreadMessages = messages.filter(
-                msg => msg.sender._id === selectedUser && msg.status !== 'read'
+        // Cleanup
+        return () => {
+            newSocket.removeAllListeners();
+            newSocket.close();
+        };
+    }, [user, selectedUser, fetchPendingRequests, fetchFriends]);
+
+    // Message handling functions
+    const handleEditMessage = async (messageId, newContent) => {
+        try {
+            const { data } = await api.put(`/messages/${messageId}`, { content: newContent });
+            setMessages(prev =>
+                prev.map(msg => (msg._id === messageId ? data : msg))
+            );
+            
+            if (socket && selectedUser) {
+                socket.emit('edit_message', { 
+                    messageId, 
+                    newContent,
+                    receiverId: selectedUser 
+                });
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Error editing message');
+            throw error;
+        }
+    };
+
+    const handleDeleteMessage = async (messageId) => {
+        try {
+            const { data } = await api.delete(`/messages/${messageId}`);
+            setMessages(prev =>
+                prev.map(msg => (msg._id === messageId ? data : msg))
             );
 
-            unreadMessages.forEach(msg => {
-                socket.emit('message_read', {
-                    messageId: msg._id,
-                    senderId: msg.sender._id,
+            if (socket && selectedUser) {
+                socket.emit('delete_message', { 
+                    messageId,
+                    receiverId: selectedUser 
                 });
-            });
-
-            setUnreadCounts(prev => ({ ...prev, [selectedUser]: 0 }));
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Error deleting message');
+            throw error;
         }
-        }, [selectedUser, messages]);
+    };
 
-// Load selected user from localStorage on mount
-        useEffect(() => {
-            const savedUserId = localStorage.getItem(SELECTED_USER_KEY);
-            if (savedUserId) {
-                setSelectedUser(savedUserId);
-            }
-        }, []);
+    const sendMessage = async (content, type = 'text', replyToId = null) => {
+        if (!selectedUser || !content.trim() || !socket) return;
+        
+        const messageData = { 
+            content, 
+            type, 
+            replyTo: replyToId,
+            receiver: selectedUser 
+        };
+        socket.emit('private_message', { to: selectedUser, message: messageData });
+    };
 
+    const handleTyping = () => {
+        if (selectedUser && socket) {
+            socket.emit('typing_start', selectedUser);
+        }
+    };
 
-    // Save selected user to localStorage when it changes
-        useEffect(() => {
-            if (selectedUser) {
-                localStorage.setItem(SELECTED_USER_KEY, selectedUser);
-            }
-            }, [selectedUser]);
-    
-        const fetchMessages = async (userId) => {
+    const handleSelectUser = async (userId) => {
+        setSelectedUser(userId);
+        setFriendRemoved(false); 
+        
+        if (userId) {
+            await fetchMessages(userId);
+        }
+    };
+
+    // Local storage handling
+    useEffect(() => {
+        const savedUserId = localStorage.getItem(SELECTED_USER_KEY);
+        if (savedUserId) {
+            setSelectedUser(savedUserId);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (selectedUser) {
+            localStorage.setItem(SELECTED_USER_KEY, selectedUser);
+        }
+    }, [selectedUser]);
+
+    // Message fetching
+    const fetchMessages = async (userId) => {
         try {
             setLoading(true);
             const { data } = await api.get(`/messages/${userId}`);
@@ -257,37 +272,9 @@ export const ChatProvider = ({ children }) => {
             setUnreadCounts(prev => ({ ...prev, [userId]: 0 }));
         } catch (error) {
             console.error('Error fetching messages:', error);
+            toast.error('Failed to fetch messages');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const sendMessage = async (content, type = 'text', replyToId = null) => {
-        if (!selectedUser || !content.trim()) return;
-        
-        console.log('Sending message:', content, type, replyToId);
-        const messageData = { 
-            content, 
-            type, 
-            replyTo: replyToId, // This should be just the ID
-            receiver: selectedUser 
-        };
-        console.log('Sending message:', messageData);
-        socket.emit('private_message', { to: selectedUser, message: messageData });
-    };
-
-    const handleTyping = () => {
-        if (selectedUser) {
-            socket.emit('typing_start', selectedUser);
-        }
-    };
-
-    
-    // Modify the setSelectedUser function
-    const handleSelectUser = async (userId) => {
-        setSelectedUser(userId);
-        if (userId) {
-            await fetchMessages(userId);
         }
     };
 
@@ -297,9 +284,7 @@ export const ChatProvider = ({ children }) => {
                 socket,
                 onlineUsers,
                 selectedUser,
-                setSelectedUser,
                 messages,
-                setMessages,
                 loading,
                 typingUsers,
                 unreadCounts,
@@ -310,6 +295,9 @@ export const ChatProvider = ({ children }) => {
                 handleEditMessage,
                 setSelectedUser: handleSelectUser,
                 handleDeleteMessage,
+                 friendRemoved
+
+                
             }}
         >
             {children}
@@ -317,4 +305,10 @@ export const ChatProvider = ({ children }) => {
     );
 };
 
-export const useChat = () => useContext(ChatContext);
+export const useChat = () => {
+    const context = useContext(ChatContext);
+    if (!context) {
+        throw new Error('useChat must be used within a ChatProvider');
+    }
+    return context;
+};

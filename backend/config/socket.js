@@ -4,18 +4,33 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const Message = require('../models/messageModel');
 
-const setupSocket = (server) => {
-    const io = socketIO(server, {
+
+
+let io;
+const onlineUsers = new Map();
+const typingUsers = new Map();
+const getIO = () => {
+    if (!io) {
+        throw new Error('Socket.io not initialized');
+    }
+    return io;
+};
+
+
+const setupSocketIO = (server) => {
+     io = socketIO(server, {
         cors: {
-            origin: "http://localhost:5174",
+            origin: "http://localhost:5177",
             methods: ["GET", "POST"]
         }
     });
 
-    // Store online users
-    const onlineUsers = new Map();
-    // Store typing status
-    const typingUsers = new Map();
+    // // Store online users
+    // const onlineUsers = new Map();
+    // // Store typing status
+    // const typingUsers = new Map();
+
+    
 
     // Socket middleware for authentication
     io.use(async (socket, next) => {
@@ -136,41 +151,41 @@ const setupSocket = (server) => {
             }
         });
 
-// Listen for 'user_active' event
-socket.on('user_active', async () => {
-    // Update user's online status
-    await User.findByIdAndUpdate(socket.user._id, {
-        'status.isOnline': true,
-        lastSeen: new Date()
-    });
+        // Listen for 'user_active' event
+        socket.on('user_active', async () => {
+            // Update user's online status
+            await User.findByIdAndUpdate(socket.user._id, {
+                'status.isOnline': true,
+                lastSeen: new Date()
+            });
 
-    // Add to online users
-    onlineUsers.set(socket.user._id.toString(), socket.id);
-    
-    // Broadcast online status
-    io.emit('user_status_change', {
-        userId: socket.user._id,
-        isOnline: true,
-        lastSeen: new Date()
-    });
-});
+            // Add to online users
+            onlineUsers.set(socket.user._id.toString(), socket.id);
+            
+            // Broadcast online status
+            io.emit('user_status_change', {
+                userId: socket.user._id,
+                isOnline: true,
+                lastSeen: new Date()
+            });
+        });
 
-// Listen for 'user_inactive' event
-socket.on('user_inactive', async () => {
-    // Update user's offline status
-    await User.findByIdAndUpdate(socket.user._id, {
-        'status.isOnline': false,
-        lastSeen: new Date()
-    });
-    
-    // Broadcast offline status
-    io.emit('user_status_change', {
-        userId: socket.user._id,
-        isOnline: false,
-        lastSeen: new Date()
-    });
-});
-        
+        // Listen for 'user_inactive' event
+        socket.on('user_inactive', async () => {
+            // Update user's offline status
+            await User.findByIdAndUpdate(socket.user._id, {
+                'status.isOnline': false,
+                lastSeen: new Date()
+            });
+            
+            // Broadcast offline status
+            io.emit('user_status_change', {
+                userId: socket.user._id,
+                isOnline: false,
+                lastSeen: new Date()
+            });
+        });
+                
         
 
 
@@ -281,6 +296,16 @@ socket.on('user_inactive', async () => {
         }
     });
     
+     // Add friend removal event handler
+    socket.on('friend_removed', async ({ userId, username }) => {
+        const receiverSocket = onlineUsers.get(userId);
+        if (receiverSocket) {
+            io.to(receiverSocket).emit('friend_removed', {
+                from: socket.user._id,
+                username: socket.user.username
+            });
+        }
+    });
     
     
 
@@ -289,4 +314,5 @@ socket.on('user_inactive', async () => {
     return io;
 };
 
-module.exports = setupSocket;
+console.log('Socket.io initialized', setupSocketIO, getIO);
+module.exports = { setupSocketIO, getIO, onlineUsers };

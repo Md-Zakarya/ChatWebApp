@@ -20,7 +20,8 @@ export default function ChatWindow() {
         sendMessage,
         handleTyping,
         setMessages,
-        handleDeleteMessage  // Add this here
+        handleDeleteMessage, 
+        friendRemoved
     } = useChat();
     const { user } = useAuth();
     const { handleEditMessage } = useChat();
@@ -29,6 +30,11 @@ export default function ChatWindow() {
     useEffect(() => {
         lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    useEffect(() => {
+        console.log('friendRemoved state changed:', friendRemoved);
+    }, [friendRemoved]);
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -105,20 +111,8 @@ export default function ChatWindow() {
         }
     };
 
-    useEffect(() => {
-        const handleFocus = () => {
-            if (socket) {
-                socket.emit('user_active');
-            }
-        };
-    
-        window.addEventListener('focus', handleFocus);
-    
-        return () => {
-            window.removeEventListener('focus', handleFocus);
-        };
-    }, [socket]);
   
+
 
     if (loading) return <div className="flex-1 flex justify-center items-center"><LoadingSpinner /></div>;
 
@@ -175,29 +169,36 @@ export default function ChatWindow() {
             </div>
         )}
 
-            {/* Message Input */}
-            <form onSubmit={handleSubmit} className="p-4 bg-white border-t">
-                <div className="flex space-x-4">
-                    <textarea
-                        value={newMessage}
-                        onChange={(e) => {
-                            setNewMessage(e.target.value);
-                            handleTyping();
-                        }}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Type a message..."
-                        className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-indigo-500 resize-none"
-                        rows="1"
-                    />
-                    <button
-                        type="submit"
-                        disabled={!newMessage.trim()}
-                        className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Send
-                    </button>
-                </div>
-            </form>
+           {/* Message Input */}
+{!friendRemoved ? (
+    <form onSubmit={handleSubmit} className="p-4 bg-white border-t flex items-center">
+        <input
+            type="text"
+            placeholder="Type your message..."
+            className="flex-1 p-2 border rounded-md focus:outline-none focus:border-indigo-500"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleTyping}
+        />
+        <button
+            type="submit"
+            className="ml-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 disabled:opacity-50"
+            disabled={!newMessage.trim()}
+        >
+            Send
+        </button>
+    </form>
+) : (
+    <div className="p-4 bg-red-100 text-red-700 text-center">
+        <p>You have been removed from this chat.</p>
+        <button
+            onClick={() => navigateToFriendsList()}
+            className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
+        >
+            Go to Friends List
+        </button>
+    </div>
+)}
         </div>
     );
 }
