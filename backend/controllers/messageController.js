@@ -2,6 +2,58 @@ const asyncHandler = require('express-async-handler');
 const Message = require('../models/messageModel');
 const User = require('../models/userModel');
 
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+
+const testGeminiConnection = async () => {
+    try {
+        console.log('Testing Gemini Connection...');
+        console.log('API Key exists:', !!process.env.GEMINI_API_KEY);
+        
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const result = await model.generateContent("Say 'API Connection Successful'");
+        const response = await result.response;
+        
+        console.log('Gemini Response:', response.text());
+        console.log('Connection test passed!');
+        return true;
+    } catch (error) {
+        console.error('Gemini Connection Error:', {
+            message: error.message,
+            stack: error.stack
+        });
+        return false;
+    }
+};
+
+const getSuggestedReplies = asyncHandler(async (req, res) => {
+    const { messageContent, chatHistory } = req.body;
+
+    try {
+        // Get the generative model
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        // Generate content
+        const result = await model.generateContent(
+            `Generate 3 short reply suggestions for this message: "${messageContent}". 
+             Recent chat context: ${chatHistory.slice(-5).map(m => m.content).join(' | ')}`
+        );
+
+        const response = await result.response;
+        const suggestions = response.text()
+            .split('\n')
+            .filter(s => s.trim())
+            .slice(0, 3);
+
+        res.json({ suggestions });
+    } catch (error) {
+        console.error('Error generating suggestions:', error);
+        res.status(500).json({ message: 'Failed to generate suggestions' });
+    }
+});
+
 /**
  * Validates if a reply message is valid:
  * - Checks if the replied message exists and is not deleted.
@@ -217,11 +269,17 @@ const reactToMessage = asyncHandler(async (req, res) => {
     await message.save();
     res.json(message.reactions);
 });
+// (async () => {
+//     const isConnected = await testGeminiConnection();
+//     console.log('Gemini Connection Status:', isConnected);
+// })();
+
 
 module.exports = {
     getChatHistory,
     sendMessage,
     editMessage,
     deleteMessage,
-    reactToMessage
+    reactToMessage,
+    getSuggestedReplies
 };

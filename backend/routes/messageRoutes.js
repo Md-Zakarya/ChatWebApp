@@ -6,7 +6,8 @@ const {
     sendMessage,
     editMessage,
     deleteMessage,
-    reactToMessage
+    reactToMessage,
+    getSuggestedReplies
 } = require('../controllers/messageController');
 
 // Fetch chat history with a specific user.
@@ -23,5 +24,8 @@ router.delete('/:id', protect, deleteMessage);
 
 // React to a message with an emoji.
 router.post('/:id/react', protect, reactToMessage);
+
+router.post('/suggest-reply', protect, getSuggestedReplies);
+
 
 module.exports = router;

@@ -2,14 +2,16 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import { useTheme } from '../../context/ThemeContext';
 
-export default function ProfileEdit({ onClose }) {
+export default function ProfileEdit({ onClose, darkMode }) {
     const { user, updateProfile } = useAuth();
     const [username, setUsername] = useState(user?.username || '');
     const [avatar, setAvatar] = useState(null);
     const [preview, setPreview] = useState(user?.avatar || '');
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef();
+  
 // frontend/src/components/Profile/ProfileEdit.jsx
 const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -62,10 +64,14 @@ const handleSubmit = async (e) => {
 };
    
 
-    return (
+    return(
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
+            <div className={`${
+                darkMode ? 'bg-gray-800' : 'bg-white'
+            } rounded-lg p-8 max-w-md w-full transition-colors duration-200`}>
+                <h2 className={`text-2xl font-bold mb-4 ${
+                    darkMode ? 'text-gray-100' : 'text-gray-900'
+                }`}>Edit Profile</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <div className="flex justify-center mb-4">
@@ -73,7 +79,9 @@ const handleSubmit = async (e) => {
                                 <img 
                                     src={preview || '/default-avatar'}
                                     alt="Avatar preview"
-                                    className="w-32 h-32 rounded-full object-cover"
+                                    className={`w-32 h-32 rounded-full object-cover ring-2 ${
+                                        darkMode ? 'ring-gray-600' : 'ring-gray-200'
+                                    }`}
                                 />
                                 <img
                                     src={user.avatar || '/default-avatar.png'}
@@ -87,7 +95,9 @@ const handleSubmit = async (e) => {
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current.click()}
-                                    className="absolute bottom-0 right-0 bg-indigo-600 text-white rounded-full p-2"
+                                    className={`absolute bottom-0 right-0 ${
+                                        darkMode ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-indigo-600 hover:bg-indigo-700'
+                                    } text-white rounded-full p-2 transition-colors duration-200`}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -104,14 +114,20 @@ const handleSubmit = async (e) => {
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                        <label className={`block text-sm font-bold mb-2 ${
+                            darkMode ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
                             Username
                         </label>
                         <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full p-2 border rounded focus:outline-none focus:border-indigo-500"
+                            className={`w-full p-2 border rounded transition-colors duration-200 ${
+                                darkMode 
+                                    ? 'bg-gray-700 border-gray-600 text-gray-100 focus:border-indigo-400' 
+                                    : 'bg-white border-gray-300 text-gray-900 focus:border-indigo-500'
+                            } focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                             required
                         />
                     </div>
@@ -119,14 +135,22 @@ const handleSubmit = async (e) => {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            className={`px-4 py-2 transition-colors duration-200 ${
+                                darkMode 
+                                    ? 'text-gray-400 hover:text-gray-200' 
+                                    : 'text-gray-600 hover:text-gray-800'
+                            }`}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                            className={`px-4 py-2 text-white rounded transition-colors duration-200 ${
+                                darkMode
+                                    ? 'bg-indigo-500 hover:bg-indigo-600'
+                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                            } disabled:opacity-50`}
                         >
                             {loading ? 'Saving...' : 'Save Changes'}
                         </button>
