@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
             });
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
+            window.dispatchEvent(new CustomEvent('userLoggedIn'));
             navigate('/chat');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials');

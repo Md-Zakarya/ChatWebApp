@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/axios';
 import { toast } from 'react-toastify';
+import { useAuth } from './AuthContext';
 
 import { useSocket } from './SocketContext';
 
@@ -14,6 +15,7 @@ export const FriendProvider = ({ children }) => {
     const [pendingRequests, setPendingRequests] = useState([]);
     const [loading, setLoading] = useState(false);
     const { socket } = useSocket();
+    const { user } = useAuth();
 
 
 
@@ -106,9 +108,24 @@ export const FriendProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        fetchFriends();
-        fetchPendingRequests();
-    }, []);
+        // Initial fetch when component mounts
+        if (user) {
+            fetchFriends();
+            fetchPendingRequests();
+        }
+
+        // Listen for login event
+        const handleLogin = () => {
+            fetchFriends();
+            fetchPendingRequests();
+        };
+
+        window.addEventListener('userLoggedIn', handleLogin);
+
+        return () => {
+            window.removeEventListener('userLoggedIn', handleLogin);
+        };
+    }, [user]);
 
 
 
