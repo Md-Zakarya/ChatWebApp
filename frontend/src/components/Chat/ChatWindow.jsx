@@ -10,6 +10,7 @@ import SuggestionBubbles from './SuggestionBubbles';
 import { useTheme } from '../../context/ThemeContext';
 import { useFriend } from '../../context/FriendContext';
 
+
 export default function ChatWindow() {
     const [newMessage, setNewMessage] = useState('');
     const [replyTo, setReplyTo] = useState(null);
@@ -27,10 +28,10 @@ export default function ChatWindow() {
         setMessages,
         handleDeleteMessage, 
         friendRemoved, 
-        onlineUsers, 
+        onlineUsers,
+        handleEditMessage,
     } = useChat();
     const { user } = useAuth();
-    const { handleEditMessage } = useChat();
     const { friends } = useFriend();
     const [suggestions, setSuggestions] = useState([]);
 
@@ -120,21 +121,23 @@ export default function ChatWindow() {
     // Reaction handling for the message
     const handleReaction = async (messageId, emoji) => {
         try {
+            // First emit socket event
+            socket.emit('message_reaction', { messageId, emoji });
+            
+            // Then make API call
             const { data: reactions } = await api.post(`/messages/${messageId}/react`, { emoji });
             
-            // Update local state
-            setMessages(prevMessages => 
-                prevMessages.map(msg => 
-                    msg._id === messageId 
-                        ? { ...msg, reactions }
+            // Finally update local state
+            setMessages(prevMessages =>
+                prevMessages.map(msg =>
+                    msg._id === messageId
+                        ? { ...msg, reactions: [...reactions] } // Ensure proper spread
                         : msg
                 )
             );
-    
-            // Emit socket event for real-time update
-            socket.emit('message_reaction', { messageId, emoji });
         } catch (error) {
             console.error('Error adding reaction:', error);
+            toast.error('Failed to add reaction');
         }
     };
     

@@ -48,7 +48,6 @@ export const AuthProvider = ({ children }) => {
             });
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
-            window.dispatchEvent(new CustomEvent('userLoggedIn'));
             navigate('/chat');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials');
@@ -56,23 +55,6 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         }
     };
-
-    //update the user profile
-  // frontend/src/context/AuthContext.jsx
-const updateProfile = async (userData) => {
-    try {
-        console.log('Updating profile with data:', userData);
-        
-        const { data } = await api.put('/auth/profile', userData);
-        
-        console.log('Profile update successful:', data);
-        setUser(data);
-        localStorage.setItem('user', JSON.stringify(data));
-    } catch (error) {
-        console.error('Profile update failed:', error);
-        throw error;
-    }
-};
 
     const logout = () => {
         setUser(null);
@@ -100,8 +82,7 @@ const updateProfile = async (userData) => {
                 register, 
                 login, 
                 logout,
-                validateToken,
-                updateProfile 
+                validateToken 
             }}
         >
             {children}

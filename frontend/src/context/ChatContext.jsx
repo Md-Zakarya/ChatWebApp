@@ -107,9 +107,11 @@ export const ChatProvider = ({ children }) => {
         });
 
         newSocket.on('message_reaction_update', ({ messageId, reactions }) => {
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg._id === messageId ? { ...msg, reactions } : msg
+            setMessages(prevMessages =>
+                prevMessages.map(msg =>
+                    msg._id === messageId
+                        ? { ...msg, reactions }
+                        : msg
                 )
             );
         });
@@ -295,7 +297,8 @@ export const ChatProvider = ({ children }) => {
                 handleEditMessage,
                 setSelectedUser: handleSelectUser,
                 handleDeleteMessage,
-                 friendRemoved
+                 friendRemoved, 
+                 setMessages
 
                 
             }}
