@@ -11,6 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "@google/generative-ai": "^0.21.0",
+>>>>>>> feature/darkmode-bugfix
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -18,7 +22,10 @@
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
+<<<<<<< HEAD
     "multer": "^1.4.5-lts.1",
+=======
+>>>>>>> feature/darkmode-bugfix
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

@@ -3,7 +3,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/axios';
 import { toast } from 'react-toastify';
+<<<<<<< HEAD
 
+=======
+import { useAuth } from './AuthContext';
+
+import { useSocket } from './SocketContext';
+>>>>>>> feature/darkmode-bugfix
 
 
 const FriendContext = createContext();
@@ -12,6 +18,15 @@ export const FriendProvider = ({ children }) => {
     const [friends, setFriends] = useState([]);
     const [pendingRequests, setPendingRequests] = useState([]);
     const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
+=======
+    const { socket } = useSocket();
+    const { user } = useAuth();
+
+
+
+    
+>>>>>>> feature/darkmode-bugfix
 
     const fetchFriends = async () => {
         try {
@@ -70,6 +85,7 @@ export const FriendProvider = ({ children }) => {
         try {
             await api.put(`/friends/request/${userId}`, { status });
             // Refetch both lists
+<<<<<<< HEAD
             fetchPendingRequests();
             fetchFriends();
         } catch (error) {
@@ -82,6 +98,89 @@ export const FriendProvider = ({ children }) => {
         fetchFriends();
         fetchPendingRequests();
     }, []);
+=======
+            await fetchPendingRequests();
+            await fetchFriends();
+            
+            // Notify the sender through the socket event
+            if (status === 'accepted') {
+                socket.emit('friend_request_response', {
+                    to: userId,
+                    accepted: true
+                });
+            }
+            
+            toast.success(`Friend request ${status}`);
+        } catch (error) {
+            console.error('Error responding to request:', error);
+            toast.error('Failed to respond to friend request');
+            throw error;
+        }
+    };
+    const removeFriend = async (userId) => {
+        try {
+            const response = await api.delete(`/friends/${userId}`);
+            toast.success(response.data.message);
+            fetchFriends();
+        } catch (error) {
+            console.error('Error removing friend:', error);
+            toast.error('Failed to remove friend');
+        }
+    };
+
+    useEffect(() => {
+        // Initial fetch when component mounts
+        if (user) {
+            fetchFriends();
+            fetchPendingRequests();
+        }
+
+        // Listen for login event
+        const handleLogin = () => {
+            fetchFriends();
+            fetchPendingRequests();
+        };
+
+        window.addEventListener('userLoggedIn', handleLogin);
+
+        return () => {
+            window.removeEventListener('userLoggedIn', handleLogin);
+        };
+    }, [user]);
+
+
+
+     // Define event handlers
+  const handleFriendRequestReceived = (data) => {
+    toast.info(`New friend request from ${data.username}`);
+    fetchPendingRequests();
+  };
+
+  const handleFriendRequestResponse = (data) => {
+    toast.info(`Friend request ${data.accepted ? 'accepted' : 'rejected'}`);
+    fetchFriends();
+  };
+
+  const handleFriendRemoved = ({ username }) => {
+    toast.info(`${username} removed you from their friends list`);
+    fetchFriends();
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for friend events
+    socket.on('friend_request_received', handleFriendRequestReceived);
+    socket.on('friend_request_response', handleFriendRequestResponse);
+    socket.on('friend_removed', handleFriendRemoved);
+
+    return () => {
+      socket.off('friend_request_received', handleFriendRequestReceived);
+      socket.off('friend_request_response', handleFriendRequestResponse);
+      socket.off('friend_removed', handleFriendRemoved);
+    };
+  }, [socket]);
+>>>>>>> feature/darkmode-bugfix
 
     return (
         <FriendContext.Provider value={{
@@ -91,7 +190,12 @@ export const FriendProvider = ({ children }) => {
             sendFriendRequest,
             respondToRequest,
             fetchFriends,
+<<<<<<< HEAD
             fetchPendingRequests
+=======
+            fetchPendingRequests,
+            removeFriend
+>>>>>>> feature/darkmode-bugfix
         }}>
             {children}
         </FriendContext.Provider>

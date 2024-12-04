@@ -2,8 +2,6 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
-const multer = require('multer');
-
 
 // Generate JWT
 const generateToken = (id) => {
@@ -86,41 +84,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function(req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
-    }
-}).single('avatar');
-
-
 const updateUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (user) {
         user.username = req.body.username || user.username;
         user.email = req.body.email || user.email;
-        
-        // Handle base64 avatar
-        if (req.body.avatar) {
-            // Validate size (5MB limit)
-            const base64Size = Buffer.from(req.body.avatar.split(',')[1], 'base64').length;
-            if (base64Size > 5242880) { // 5MB in bytes
-                res.status(400);
-                throw new Error('Avatar image must be less than 5MB');
-            }
-            user.avatar = req.body.avatar;
-        }
-
+        user.avatar = req.body.avatar || user.avatar;
         user.status.text = req.body.status || user.status.text;
         user.theme = req.body.theme || user.theme;
         
@@ -144,6 +114,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         throw new Error('User not found');
     }
 });
+
 module.exports = {
     registerUser,
     loginUser,

@@ -48,6 +48,10 @@ export const AuthProvider = ({ children }) => {
             });
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
+<<<<<<< HEAD
+=======
+            window.dispatchEvent(new CustomEvent('userLoggedIn'));
+>>>>>>> feature/darkmode-bugfix
             navigate('/chat');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials');
@@ -56,6 +60,26 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+<<<<<<< HEAD
+=======
+    //update the user profile
+  // frontend/src/context/AuthContext.jsx
+const updateProfile = async (userData) => {
+    try {
+        console.log('Updating profile with data:', userData);
+        
+        const { data } = await api.put('/auth/profile', userData);
+        
+        console.log('Profile update successful:', data);
+        setUser(data);
+        localStorage.setItem('user', JSON.stringify(data));
+    } catch (error) {
+        console.error('Profile update failed:', error);
+        throw error;
+    }
+};
+
+>>>>>>> feature/darkmode-bugfix
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
@@ -82,7 +106,12 @@ export const AuthProvider = ({ children }) => {
                 register, 
                 login, 
                 logout,
+<<<<<<< HEAD
                 validateToken 
+=======
+                validateToken,
+                updateProfile 
+>>>>>>> feature/darkmode-bugfix
             }}
         >
             {children}

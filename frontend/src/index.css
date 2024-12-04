@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
+<<<<<<< HEAD
 @tailwind utilities;
+=======
+@tailwind utilities;
+
+
+body {
+    @apply min-h-screen;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+body.dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+>>>>>>> feature/darkmode-bugfix
