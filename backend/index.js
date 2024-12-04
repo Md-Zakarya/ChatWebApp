@@ -29,7 +29,7 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
-
+dotenv.config();
 
 
 
