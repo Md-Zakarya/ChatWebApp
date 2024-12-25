@@ -45,7 +45,7 @@ export const ChatProvider = ({ children }) => {
     useEffect(() => {
         if (!user) return;
 
-        const newSocket = io('http://localhost:5000', {
+        const newSocket = io('https://chatify-0xgi.onrender.com', {
             auth: { token: user.token },
         });
 

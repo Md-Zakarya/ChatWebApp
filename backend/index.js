@@ -8,6 +8,7 @@ const { setupSocketIO } = require('./config/socket');
 
 const connectDB = require('./config/db');
 const adminRoutes = require('./routes/adminRoutes');
+const seedAdmin = require('./seeders/adminSeeder');
 
 
 
@@ -37,14 +38,24 @@ app.use('/api/admin', adminRoutes);
 const PORT = process.env.PORT || 5000;
 dotenv.config();
 
+// Root route handler
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to ChatApp API' });
+});
+
+// Handle 404 routes
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
 
 
 
 
 // Connect to database
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
+    .then(async () => {  // Add async here
         console.log('Connected to MongoDB');
+        await seedAdmin();
         httpServer.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
