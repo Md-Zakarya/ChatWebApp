@@ -12,13 +12,13 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    // const newSocket = io('https://chatify-0xgi.onrender.com', {
-    //   auth: { token: user.token },
-    // });
+    const newSocket = io('https://chatify-0xgi.onrender.com', {
+      auth: { token: user.token },
+    });
            // Local development URL (uncomment below lines and comment above lines for local development)
-const newSocket = io('http://localhost:5000', {
-  auth: { token: user.token },
-});
+// const newSocket = io('http://localhost:5000', {
+//   auth: { token: user.token },
+// });
 
     setSocket(newSocket);
 
