@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://chatify-0xgi.onrender.com',
+    baseURL: 'https://chatify-0xgi.onrender.com/api',
 });
 
 // Add token to every request
