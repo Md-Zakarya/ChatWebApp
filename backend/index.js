@@ -7,6 +7,9 @@ const { createServer } = require('http');
 const { setupSocketIO } = require('./config/socket');
 
 const connectDB = require('./config/db');
+const adminRoutes = require('./routes/adminRoutes');
+
+
 
 dotenv.config();
 
@@ -14,7 +17,9 @@ const app = express();
 const httpServer = createServer(app);
 const io = setupSocketIO(httpServer);
 
+// Middleware
 app.use(cors());
+app.use(express.json());
 
 
 // Routes
@@ -27,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 dotenv.config();

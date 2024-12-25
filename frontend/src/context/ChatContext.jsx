@@ -17,7 +17,7 @@ export const ChatProvider = ({ children }) => {
     const [typingUsers, setTypingUsers] = useState(new Set());
     const [unreadCounts, setUnreadCounts] = useState({});
     const { user } = useAuth();
-    const { fetchFriends, fetchPendingRequests } = useFriend();
+    const { friends, fetchFriends, fetchPendingRequests } = useFriend();
     const [friendRemoved, setFriendRemoved] = useState(false);
 
     // Window focus handling
@@ -107,9 +107,11 @@ export const ChatProvider = ({ children }) => {
         });
 
         newSocket.on('message_reaction_update', ({ messageId, reactions }) => {
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg._id === messageId ? { ...msg, reactions } : msg
+            setMessages(prevMessages =>
+                prevMessages.map(msg =>
+                    msg._id === messageId
+                        ? { ...msg, reactions }
+                        : msg
                 )
             );
         });
@@ -252,10 +254,16 @@ export const ChatProvider = ({ children }) => {
     // Local storage handling
     useEffect(() => {
         const savedUserId = localStorage.getItem(SELECTED_USER_KEY);
-        if (savedUserId) {
-            setSelectedUser(savedUserId);
+        if (savedUserId && friends.length > 0) {
+            const isValidUser = friends.some(friend => friend.userId === savedUserId);
+            if (isValidUser) {
+                setSelectedUser(savedUserId);
+            } else {
+                localStorage.removeItem(SELECTED_USER_KEY);
+                setSelectedUser(null);
+            }
         }
-    }, []);
+    }, [friends]);
 
     useEffect(() => {
         if (selectedUser) {
@@ -295,7 +303,8 @@ export const ChatProvider = ({ children }) => {
                 handleEditMessage,
                 setSelectedUser: handleSelectUser,
                 handleDeleteMessage,
-                 friendRemoved
+                 friendRemoved, 
+                 setMessages
 
                 
             }}
