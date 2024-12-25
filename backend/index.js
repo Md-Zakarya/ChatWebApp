@@ -8,6 +8,7 @@ const { setupSocketIO } = require('./config/socket');
 
 const connectDB = require('./config/db');
 const adminRoutes = require('./routes/adminRoutes');
+const seedAdmin = require('./seeders/adminSeeder');
 
 
 
@@ -53,6 +54,7 @@ app.use('*', (req, res) => {
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB');
+       await seedAdmin();
         httpServer.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
