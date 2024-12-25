@@ -37,7 +37,15 @@ app.use('/api/admin', adminRoutes);
 const PORT = process.env.PORT || 5000;
 dotenv.config();
 
+// Root route handler
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to ChatApp API' });
+});
 
+// Handle 404 routes
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
 
 
 
