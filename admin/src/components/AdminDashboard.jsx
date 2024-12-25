@@ -6,6 +6,32 @@ import api from '../services/axios';
 import AdminHeader from './layout/AdminHeader';
 import AdminSidebar from './layout/AdminSidebar';
 import { HomeIcon, UserGroupIcon, ChartBarIcon, InformationCircleIcon } from '@heroicons/react/outline';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
 
 export default function AdminDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,6 +45,14 @@ export default function AdminDashboard() {
             messagesTrend: 0
         }
     });
+    const [analyticsData, setAnalyticsData] = useState({
+        userGrowth: [],
+        messagePatterns: [],
+        engagement: {},
+        chatDuration: {},
+        platformUsage: {}
+    });
+    
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -136,39 +170,82 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        {/* Activity & Analytics Section */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Recent Activity */}
+                         {/* Analytics Preview */}
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
-                                {loading ? (
-                                    <div className="space-y-3">
-                                        {[...Array(3)].map((_, i) => (
-                                            <div key={i} className="animate-pulse flex space-x-4">
-                                                <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-gray-600 dark:text-gray-300 text-sm">
-                                        <p>No recent activity to show.</p>
-                                    </div>
-                                )}
-                            </div>
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Analytics Overview</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* User Growth Trend */}
+        <div className="h-64">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">User Growth</h4>
+            <Line
+                data={{
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [65, 78, 90, 105, 125, 140],
+                        borderColor: '#3B82F6',
+                        tension: 0.2
+                    }]
+                }}
+                options={{
+                    responsive: true,
+                    maintainAspectRatio: false
+                }}
+            />
+        </div>
 
-                            {/* Analytics Preview */}
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Analytics Overview</h3>
-                                {/* Add your analytics visualization component here */}
-                                <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                    <p>Analytics visualization coming soon</p>
-                                </div>
-                            </div>
-                        </div>
+        {/* Message Activity */}
+        <div className="h-64">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Message Activity</h4>
+            <Bar
+                data={{
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Messages Sent',
+                        data: [1200, 1900, 1700, 1600, 2100, 1000, 800],
+                        backgroundColor: '#10B981'
+                    }]
+                }}
+                options={{
+                    responsive: true,
+                    maintainAspectRatio: false
+                }}
+            />
+        </div>
+
+        {/* Platform Usage */}
+        <div className="h-64">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Platform Usage</h4>
+            <Doughnut
+                data={{
+                    labels: ['Mobile', 'Desktop', 'Tablet'],
+                    datasets: [{
+                        data: [60, 30, 10],
+                        backgroundColor: ['#EF4444', '#3B82F6', '#F59E0B']
+                    }]
+                }}
+                options={{
+                    responsive: true,
+                    maintainAspectRatio: false
+                }}
+            />
+        </div>
+
+        {/* Engagement Metrics */}
+        <div className="h-64 grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h5 className="text-sm font-medium text-gray-600 dark:text-gray-300">Avg. Chat Duration</h5>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">12.5 min</p>
+                <p className="text-sm text-green-600 dark:text-green-400">↑ 8% from last week</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h5 className="text-sm font-medium text-gray-600 dark:text-gray-300">Response Rate</h5>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">94%</p>
+                <p className="text-sm text-green-600 dark:text-green-400">↑ 2% from last week</p>
+            </div>
+        </div>
+    </div>
+</div>
                     </div>
                 </main>
             </div>

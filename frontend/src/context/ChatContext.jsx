@@ -49,6 +49,11 @@ export const ChatProvider = ({ children }) => {
             auth: { token: user.token },
         });
 
+        // Local development URL (uncomment below lines and comment above lines for local development)
+// const newSocket = io('http://localhost:5000', {
+//     auth: { token: user.token },
+// });
+
         setSocket(newSocket);
 
         // User status events

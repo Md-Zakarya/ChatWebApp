@@ -163,18 +163,22 @@ export default function UsersList() {
         : 'bg-white text-gray-900 border-gray-200'
 }`}>
                 <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Search users..."
-                        className={`w-full p-2 pl-10 border rounded-lg transition-all ${
-                            darkMode 
-                                ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' 
-                                : 'bg-white border-gray-300 text-gray-900'
-                        } focus:ring-2 focus:ring-indigo-500`}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    />
+                <input
+    type="text"
+    placeholder="Search users..."
+    className={`w-full p-2 pl-10 border rounded-lg transition-all ${
+        darkMode 
+            ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' 
+            : 'bg-white border-gray-300 text-gray-900'
+    } focus:ring-2 focus:ring-indigo-500`}
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    onKeyDown={(e) => {
+        e.stopPropagation(); // Stop event from bubbling up
+        if (e.key === 'Enter') handleSearch();
+    }}
+    onClick={(e) => e.stopPropagation()} // Add this to prevent click from bubbling
+/>
                     <svg
                         className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500"
                         fill="none"

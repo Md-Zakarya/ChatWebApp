@@ -56,6 +56,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateProfile = async (userData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const { data } = await api.put('/auth/profile', userData);
+            setUser(data);
+            localStorage.setItem('user', JSON.stringify(data));
+            return data;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update profile');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
@@ -82,7 +100,8 @@ export const AuthProvider = ({ children }) => {
                 register, 
                 login, 
                 logout,
-                validateToken 
+                validateToken,
+                updateProfile
             }}
         >
             {children}
