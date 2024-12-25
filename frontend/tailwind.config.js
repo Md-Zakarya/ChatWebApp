@@ -1,4 +1,6 @@
-/** @type {import('tailwindcss').Config} */
+import typography from '@tailwindcss/typography'
+import forms from '@tailwindcss/forms'
+
 export default {
   darkMode: 'class',
   content: [
@@ -10,7 +12,7 @@ export default {
       colors: {
         primary: {
           50: '#f0f6ff',
-          100: '#e0edff', 
+          100: '#e0edff',
           200: '#c7ddff',
           300: '#9ec2ff',
           400: '#769eff',
@@ -25,30 +27,14 @@ export default {
           900: '#15161c',
         }
       },
-      animation: {
-        'fade-in': 'fadeIn 0.3s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'pop': 'pop 0.2s ease-out',
-        'bounce-subtle': 'bounceSubtle 1s infinite',
-      },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        pop: {
-          '0%': { transform: 'scale(0.95)', opacity: '0' },
-          '50%': { transform: 'scale(1.02)' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        bounceSubtle: {
-          '0%, 100%': { transform: 'translateY(-2%)' },
-          '50%': { transform: 'translateY(0)' },
-        },
+        '0%': { transform: 'scale(0.95)', opacity: '0' },
+        '50%': { transform: 'scale(1.02)' },
+        '100%': { transform: 'scale(1)', opacity: '1' },
+      },
+      bounceSubtle: {
+        '0%, 100%': { transform: 'translateY(-2%)' },
+        '50%': { transform: 'translateY(0)' },
       },
       backdropBlur: {
         xs: '2px',
@@ -69,7 +55,7 @@ export default {
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/forms'),
+    typography,
+    forms
   ],
 }
