@@ -163,24 +163,10 @@ export default function UsersList() {
         : 'bg-white text-gray-900 border-gray-200'
 }`}>
                 <div className="relative" 
-    onTouchStart={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }}
-    onTouchEnd={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }}
-    onTouchMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }}
     onClick={(e) => {
-        e.preventDefault();
         e.stopPropagation();
     }}
     onFocus={(e) => {
-        e.preventDefault();
         e.stopPropagation();
     }}>
    <input
@@ -197,10 +183,7 @@ export default function UsersList() {
         e.stopPropagation();
         if (e.key === 'Enter') handleSearch();
     }}
-    onFocus={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }}
+    onClick={(e) => e.stopPropagation()}
 />
                     <svg
                         className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500"
