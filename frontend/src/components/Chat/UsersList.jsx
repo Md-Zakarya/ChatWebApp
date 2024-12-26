@@ -162,26 +162,46 @@ export default function UsersList() {
         ? 'bg-gray-800 text-white border-gray-700' 
         : 'bg-white text-gray-900 border-gray-200'
 }`}>
-               <div className="relative" 
-    onTouchStart={(e) => e.stopPropagation()}
-    onTouchEnd={(e) => e.stopPropagation()}
-    onTouchMove={(e) => e.stopPropagation()}
-    onClick={(e) => e.stopPropagation()}>
-    <input
-        type="text"
-        placeholder="Search users..."
-        className={`w-full p-2 pl-10 border rounded-lg transition-all ${
-            darkMode 
-                ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' 
-                : 'bg-white border-gray-300 text-gray-900'
-        } focus:ring-2 focus:ring-indigo-500`}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onKeyDown={(e) => {
-            e.stopPropagation();
-            if (e.key === 'Enter') handleSearch();
-        }}
-    />
+                <div className="relative" 
+    onTouchStart={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }}
+    onTouchEnd={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }}
+    onTouchMove={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }}
+    onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }}
+    onFocus={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }}>
+   <input
+    type="text"
+    placeholder="Search users..."
+    className={`w-full p-2 pl-10 border rounded-lg transition-all ${
+        darkMode 
+            ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' 
+            : 'bg-white border-gray-300 text-gray-900'
+    } focus:ring-2 focus:ring-indigo-500`}
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') handleSearch();
+    }}
+    onFocus={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }}
+/>
                     <svg
                         className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500"
                         fill="none"
