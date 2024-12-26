@@ -169,7 +169,7 @@ export default function UsersList() {
     onFocus={(e) => {
         e.stopPropagation();
     }}>
-   <input
+  <input
     type="text"
     placeholder="Search users..."
     className={`w-full p-2 pl-10 border rounded-lg transition-all ${
@@ -184,6 +184,14 @@ export default function UsersList() {
         if (e.key === 'Enter') handleSearch();
     }}
     onClick={(e) => e.stopPropagation()}
+    onFocus={(e) => {
+        e.stopPropagation();
+        e.preventDefault(); // Prevent any default focusing behavior
+    }}
+    onBlur={(e) => {
+        e.stopPropagation();
+        e.preventDefault(); // Prevent any default blur behavior
+    }}
 />
                     <svg
                         className="w-5 h-5 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500"
