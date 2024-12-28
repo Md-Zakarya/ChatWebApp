@@ -199,21 +199,14 @@ export default function UsersList() {
         </div>
       </div>
 
-      <div
-        className={`p-4 border ${
-          darkMode
-            ? "bg-gray-800 text-white border-gray-700"
-            : "bg-white text-gray-900 border-gray-200"
-        }`}
-      >
-       <div className="relative" 
-    onClick={(e) => {
-        e.stopPropagation();
-    }}
-    onFocus={(e) => {
-        e.stopPropagation();
-    }}>
-  <input
+
+            <div className={`p-4 border ${
+    darkMode 
+        ? 'bg-gray-800 text-white border-gray-700' 
+        : 'bg-white text-gray-900 border-gray-200'
+}`}>
+                <div className="relative">
+                <input
     type="text"
     placeholder="Search users..."
     className={`w-full p-2 pl-10 border rounded-lg transition-all ${
