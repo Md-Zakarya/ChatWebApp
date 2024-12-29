@@ -21,7 +21,7 @@ const setupSocketIO = (server) => {
      io = socketIO(server, {
         cors: {
               origin: [
-        "http://localhost:5174",
+        // "http://localhost:5174",
         "https://chat-web-app-orpin.vercel.app"
       ],
             methods: ["GET", "POST"]

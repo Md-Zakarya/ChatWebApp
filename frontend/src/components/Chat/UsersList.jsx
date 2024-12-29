@@ -364,115 +364,131 @@ export default function UsersList() {
       )}
 
       {/* Friends List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-        <div className={`p-4 ${darkMode ? "bg-gray-900" : "bg-white"}`}>
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-            Friends
-          </h3>
-          {friends.map((friend) => (
-            <div
-              key={friend._id}
-              onClick={() => {
-                setSelectedUser(friend._id);
-                setUnreadCounts((prev) => ({ ...prev, [friend._id]: 0 }));
-              }}
-              className={`w-full p-4 flex items-center space-x-3 cursor-pointer rounded-lg transition-colors duration-200 ${
-                selectedUser === friend._id
-                  ? darkMode
-                    ? "bg-gray-800 border border-gray-700"
-                    : "bg-indigo-50"
-                  : darkMode
-                  ? "hover:bg-gray-800 border border-gray-800"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              <div className="relative">
-                <img
-                  src={friend.avatar || "/default-avatar.png"}
-                  alt={friend.username}
-                  className="w-12 h-12 rounded-full border-2 dark:border-gray-700"
-                />
-                <span
-                  className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 ${
-                    darkMode ? "border-gray-800" : "border-white"
-                  } ${
-                    onlineUsers[friend._id]?.isOnline
-                      ? "bg-green-500"
-                      : "bg-gray-500"
-                  }`}
-                />
-              </div>
-              <div className="flex-1 text-left">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 dark:hover:scrollbar-thumb-gray-500 transition-all">
+  <div className={`p-4 ${darkMode ? "bg-gray-900" : "bg-white"}`}>
+    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4 pl-2">
+      Friends ({friends.length})
+    </h3>
+    
+    {friends.length === 0 ? (
+      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        No friends yet. Add some friends to start chatting!
+      </div>
+    ) : (
+      <div className="space-y-2">
+        {friends.map((friend) => (
+          <div
+            key={friend._id}
+            onClick={() => {
+              setSelectedUser(friend._id);
+              setUnreadCounts((prev) => ({ ...prev, [friend._id]: 0 }));
+            }}
+            className={`group w-full p-4 flex items-center space-x-4 cursor-pointer rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] ${
+              selectedUser === friend._id
+                ? darkMode
+                  ? "bg-gray-800 border-2 border-indigo-500/30"
+                  : "bg-indigo-50 border-2 border-indigo-100"
+                : darkMode
+                ? "hover:bg-gray-800/70 border border-gray-800"
+                : "hover:bg-gray-50 border border-transparent"
+            }`}
+          >
+            <div className="relative flex-shrink-0">
+              <img
+                src={friend.avatar || "/default-avatar.png"}
+                alt={friend.username}
+                className="w-12 h-12 rounded-full object-cover border-2 dark:border-gray-700 transition-transform group-hover:scale-110"
+              />
+              <span
+                className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 transform scale-90 transition-all duration-200 ${
+                  darkMode ? "border-gray-800" : "border-white"
+                } ${
+                  onlineUsers[friend._id]?.isOnline
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-gray-400"
+                }`}
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
                 <div
-                  className={`
-    font-medium text-base
-    truncate max-w-[180px]
-    transition-colors duration-200
-    ${
-      darkMode
-        ? "text-gray-100 group-hover:text-indigo-300"
-        : "text-gray-900 group-hover:text-indigo-600"
-    }
-`}
+                  className={`font-medium text-base truncate transition-colors duration-200 ${
+                    darkMode
+                      ? "text-gray-100 group-hover:text-indigo-300"
+                      : "text-gray-900 group-hover:text-indigo-600"
+                  }`}
                 >
                   {friend.username}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {onlineUsers[friend._id]?.isOnline ? "Online" : "Offline"}
-                </div>
-              </div>
-              {unreadCounts[friend._id] > 0 && (
-                <span className="bg-indigo-500 dark:bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">
-                  {unreadCounts[friend._id]}
-                </span>
-              )}
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDropdownOpen(
-                      dropdownOpen === friend._id ? null : friend._id
-                    );
-                  }}
-                  className={`ml-2 px-2 py-1 text-xs rounded transition-colors duration-200 ${
-                    darkMode
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                  }`}
-                >
-                  ⋮
-                </button>
-                {dropdownOpen === friend._id && (
-                  <div
-                    className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-10 ${
-                      darkMode
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-white border-gray-100"
-                    }`}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFriendToRemove(friend);
-                        setShowRemoveModal(true);
-                        setDropdownOpen(null);
-                      }}
-                      className={`block w-full px-4 py-2 text-left text-sm rounded-lg transition-colors duration-200 ${
-                        darkMode
-                          ? "text-red-400 hover:bg-red-900/50"
-                          : "text-red-600 hover:bg-red-50"
-                      }`}
-                    >
-                      Remove Friend
-                    </button>
-                  </div>
+                {unreadCounts[friend._id] > 0 && (
+                  <span className="bg-indigo-500 dark:bg-indigo-600 text-white text-xs px-3 py-1 rounded-full ml-2 animate-bounce">
+                    {unreadCounts[friend._id]}
+                  </span>
                 )}
               </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                <span className={`w-2 h-2 rounded-full ${
+                  onlineUsers[friend._id]?.isOnline
+                    ? "bg-green-500"
+                    : "bg-gray-400"
+                }`}/>
+                <span>{onlineUsers[friend._id]?.isOnline ? "Online" : "Last seen recently"}</span>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDropdownOpen(dropdownOpen === friend._id ? null : friend._id);
+                }}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  darkMode
+                    ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+                    : "hover:bg-gray-200 text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+
+              {dropdownOpen === friend._id && (
+                <div
+                  className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border z-20 transform transition-all duration-200 scale-100 opacity-100 ${
+                    darkMode
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-100"
+                  }`}
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFriendToRemove(friend);
+                      setShowRemoveModal(true);
+                      setDropdownOpen(null);
+                    }}
+                    className={`flex items-center w-full px-4 py-3 text-left text-sm rounded-xl transition-colors duration-200 ${
+                      darkMode
+                        ? "text-red-400 hover:bg-red-900/30"
+                        : "text-red-600 hover:bg-red-50"
+                    }`}
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Remove Friend
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
       {/* Profile Edit Modal */}
       {showProfileModal && (
         <div className="fixed inset-0 z-50">

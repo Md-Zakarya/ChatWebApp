@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import SuggestionBubbles from './SuggestionBubbles';
 import { useTheme } from '../../context/ThemeContext';
 import { useFriend } from '../../context/FriendContext';
+import { MessageSkeleton } from '../MessageSkeleton';
 
 
 export default function ChatWindow() {
@@ -30,6 +31,7 @@ export default function ChatWindow() {
         friendRemoved, 
         onlineUsers,
         handleEditMessage,
+        isMessagesLoading,
     } = useChat();
     const { user } = useAuth();
     const { friends } = useFriend();
@@ -251,29 +253,30 @@ export default function ChatWindow() {
         </button>
     </div>
 </div>
-            {/* Messages Area */}
-            <div className={`flex-1 p-4 overflow-y-auto ${
+                {/* Messages Area with Loading State */}
+                <div className={`flex-1 p-4 overflow-y-auto ${
                 darkMode ? 'bg-gray-900' : 'bg-gray-50'
             }`}>
-                <div className="space-y-4">
-                    {messages.map((message, index) => (
-                        <MessageBubble
-                            key={message._id} 
-                            message={{
-                                ...message,
-                                canEdit: message.sender._id === user._id && !message.isDeleted,
-                                canDelete: message.sender._id === user._id && !message.isDeleted
-                            }}
-                            isOwnMessage={message.sender._id === user._id}
-                            onReply={setReplyTo}
-                            onReact={handleReaction}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            darkMode={darkMode}
-                        />
-                    ))}
-                    <div ref={lastMessageRef} />
-                </div>
+                {isMessagesLoading ? (
+                    <div className="h-full flex justify-center items-center">
+                        <MessageSkeleton darkMode={darkMode} />
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {messages.map((message, index) => (
+                            <MessageBubble
+                                key={message._id} 
+                                message={message}
+                                isOwnMessage={message.sender._id === user._id}
+                                onReply={setReplyTo}
+                                onReact={handleReaction}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                        <div ref={lastMessageRef} />
+                    </div>
+                )}
             </div>
         
             {/* Reply Preview */}
