@@ -19,6 +19,9 @@ export const ChatProvider = ({ children }) => {
     const { user } = useAuth();
     const { friends, fetchFriends, fetchPendingRequests } = useFriend();
     const [friendRemoved, setFriendRemoved] = useState(false);
+    const [isAppLoading, setIsAppLoading] = useState(true);
+    const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+    
 
     // Window focus handling
     useEffect(() => {
@@ -50,9 +53,9 @@ export const ChatProvider = ({ children }) => {
         });
 
         // Local development URL (uncomment below lines and comment above lines for local development)
-// const newSocket = io('http://localhost:5000', {
-//     auth: { token: user.token },
-// });
+        // const newSocket = io('http://localhost:5000', {
+        //     auth: { token: user.token },
+        // });
 
         setSocket(newSocket);
 
@@ -276,10 +279,19 @@ export const ChatProvider = ({ children }) => {
         }
     }, [selectedUser]);
 
+
+
+        
+
+
+
+
+
+
     // Message fetching
     const fetchMessages = async (userId) => {
         try {
-            setLoading(true);
+            setIsMessagesLoading(true);
             const { data } = await api.get(`/messages/${userId}`);
             setMessages(data);
             setUnreadCounts(prev => ({ ...prev, [userId]: 0 }));
@@ -287,7 +299,7 @@ export const ChatProvider = ({ children }) => {
             console.error('Error fetching messages:', error);
             toast.error('Failed to fetch messages');
         } finally {
-            setLoading(false);
+            setIsMessagesLoading(false);
         }
     };
 
@@ -309,7 +321,8 @@ export const ChatProvider = ({ children }) => {
                 setSelectedUser: handleSelectUser,
                 handleDeleteMessage,
                  friendRemoved, 
-                 setMessages
+                 setMessages,
+                 isMessagesLoading
 
                 
             }}
