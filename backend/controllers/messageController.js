@@ -7,26 +7,26 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 
-const testGeminiConnection = async () => {
-    try {
-        console.log('Testing Gemini Connection...');
-        console.log('API Key exists:', !!process.env.GEMINI_API_KEY);
+// const testGeminiConnection = async () => {
+//     try {
+//         console.log('Testing Gemini Connection...');
+//         console.log('API Key exists:', !!process.env.GEMINI_API_KEY);
         
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const result = await model.generateContent("Say 'API Connection Successful'");
-        const response = await result.response;
+//         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+//         const result = await model.generateContent("Say 'API Connection Successful'");
+//         const response = await result.response;
         
-        console.log('Gemini Response:', response.text());
-        console.log('Connection test passed!');
-        return true;
-    } catch (error) {
-        console.error('Gemini Connection Error:', {
-            message: error.message,
-            stack: error.stack
-        });
-        return false;
-    }
-};
+//         console.log('Gemini Response:', response.text());
+//         console.log('Connection test passed!');
+//         return true;
+//     } catch (error) {
+//         console.error('Gemini Connection Error:', {
+//             message: error.message,
+//             stack: error.stack
+//         });
+//         return false;
+//     }
+// };
 
 const getSuggestedReplies = asyncHandler(async (req, res) => {
     const { messageContent, chatHistory } = req.body;
