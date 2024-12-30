@@ -76,40 +76,130 @@ const setupSocketIO = (server) => {
         });
 
         // Handle private messages
-        socket.on('private_message', async ({ to, message }) => {
-            const receiverSocket = onlineUsers.get(to);
-            
-            // Save message to database
-            const newMessage = await Message.create({
-                sender: socket.user._id,
-                receiver: to,
-                content: message.content,
-                type: message.type || 'text',
-                replyTo: message.replyTo 
-            });
 
-            const populatedMessage = await newMessage.populate([
-                { path: 'sender receiver', select: 'username avatar' },
-                {
-                    path: 'replyTo',
-                    select: 'content sender receiver isDeleted createdAt',
-                    populate: {
-                        path: 'sender',
-                        select: 'username avatar'
-                    }
+           socket.on('private_message', async ({ to, message }) => {
+            try {
+                const receiverSocket = onlineUsers.get(to);
+                    
+                // 1. Quick message creation without population
+                const newMessage = await Message.create({
+                    sender: socket.user._id,
+                    receiver: to,
+                    content: message.content,
+                    type: message.type || 'text',
+                    replyTo: message.replyTo,
+                    status: receiverSocket ? 'delivered' : 'sent'
+                });
+        
+                // 2. Prepare minimal data for immediate emission
+                const minimalMessage = {
+                    _id: newMessage._id,
+                    content: message.content,
+                    sender: {
+                        _id: socket.user._id,
+                        username: socket.user.username,
+                        avatar: socket.user.avatar
+                    },
+                    receiver: to,
+                    type: message.type || 'text',
+                    status: receiverSocket ? 'delivered' : 'sent',
+                    createdAt: newMessage.createdAt,
+                    replyTo: message.replyTo
+                };
+        
+                // 3. Emit minimal message immediately
+                if (receiverSocket) {
+                    io.to(receiverSocket).emit('receive_message', minimalMessage);
                 }
-            ]);
-
-            // Send to receiver if online
-            if (receiverSocket) {
-                io.to(receiverSocket).emit('receive_message', populatedMessage);
-                // Update message status to delivered
-                await Message.findByIdAndUpdate(newMessage._id, { status: 'delivered' });
+                socket.emit('message_sent', minimalMessage);
+        
+                // 4. Populate full details asynchronously
+                const populationPromise = newMessage.populate([
+                    { path: 'sender receiver', select: 'username avatar' },
+                    {
+                        path: 'replyTo',
+                        select: 'content sender receiver isDeleted createdAt',
+                        populate: {
+                            path: 'sender',
+                            select: 'username avatar'
+                        }
+                    }
+                ]);
+        
+                // 5. Handle populated data
+                populationPromise.then(populatedMessage => {
+                    // Optional: Emit updated data if needed
+                    if (receiverSocket) {
+                        io.to(receiverSocket).emit('message_update', populatedMessage);
+                    }
+                    socket.emit('message_update', populatedMessage);
+                }).catch(error => {
+                    console.error('Message population error:', error);
+                    // Handle population error - could emit error event if needed
+                });
+        
+                // 6. Update unread count for receiver
+                try {
+                    await User.findByIdAndUpdate(to, {
+                        $push: {
+                            unreadMessages: {
+                                from: socket.user._id,
+                                messageId: newMessage._id
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error updating unread count:', error);
+                }
+        
+            } catch (error) {
+                console.error('Message sending error:', error);
+                socket.emit('message_error', {
+                    error: 'Failed to send message',
+                    messageId: message._id
+                });
             }
-
-            // Send back to sender with message id
-            socket.emit('message_sent', populatedMessage);
         });
+
+
+
+
+
+        
+        // socket.on('private_message', async ({ to, message }) => {
+        //     const receiverSocket = onlineUsers.get(to);
+            
+        //     // Save message to database
+        //     const newMessage = await Message.create({
+        //         sender: socket.user._id,
+        //         receiver: to,
+        //         content: message.content,
+        //         type: message.type || 'text',
+        //         replyTo: message.replyTo 
+        //     });
+
+        //     const populatedMessage = await newMessage.populate([
+        //         { path: 'sender receiver', select: 'username avatar' },
+        //         {
+        //             path: 'replyTo',
+        //             select: 'content sender receiver isDeleted createdAt',
+        //             populate: {
+        //                 path: 'sender',
+        //                 select: 'username avatar'
+        //             }
+        //         }
+        //     ]);
+
+        //     // Send to receiver if online
+        //     if (receiverSocket) {
+        //         io.to(receiverSocket).emit('receive_message', populatedMessage);
+        //         // Update message status to delivered
+        //         await Message.findByIdAndUpdate(newMessage._id, { status: 'delivered' });
+        //     }
+
+        //     // Send back to sender with message id
+        //     socket.emit('message_sent', populatedMessage);
+        // });
 
         // Handle typing status
         socket.on('typing_start', (receiverId) => {
