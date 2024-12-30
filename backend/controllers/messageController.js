@@ -27,7 +27,6 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 //         return false;
 //     }
 // };
-
 const getSuggestedReplies = asyncHandler(async (req, res) => {
     const { messageContent, chatHistory } = req.body;
 
@@ -36,23 +35,50 @@ const getSuggestedReplies = asyncHandler(async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         // Generate content
-        const result = await model.generateContent(
-            `Generate 3 short reply suggestions for this message: "${messageContent}". 
-             Recent chat context: ${chatHistory.slice(-5).map(m => m.content).join(' | ')}`
-        );
+        // const result = await model.generateContent(
+        //     `Generate 3 short reply suggestions for this message: "${messageContent}". 
+        //      Recent chat context: ${chatHistory.slice(-5).map(m => m.content).join(' | ')}`
+        // );
 
-        const response = await result.response;
-        const suggestions = response.text()
-            .split('\n')
-            .filter(s => s.trim())
-            .slice(0, 3);
+        // const response = await result.response;
+        // const suggestions = response.text()
+        //     .split('\n')
+        //     .filter(s => s.trim())
+        //     .slice(0, 3);
 
-        res.json({ suggestions });
+        // res.json({ suggestions });
+        res.json({ suggestions: [] });
     } catch (error) {
         console.error('Error generating suggestions:', error);
         res.status(500).json({ message: 'Failed to generate suggestions' });
     }
 });
+
+// const getSuggestedReplies = asyncHandler(async (req, res) => {
+//     const { messageContent, chatHistory } = req.body;
+
+//     try {
+//         // Get the generative model
+//         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+//         // Generate content
+//         const result = await model.generateContent(
+//             `Generate 3 short reply suggestions for this message: "${messageContent}". 
+//              Recent chat context: ${chatHistory.slice(-5).map(m => m.content).join(' | ')}`
+//         );
+
+//         const response = await result.response;
+//         const suggestions = response.text()
+//             .split('\n')
+//             .filter(s => s.trim())
+//             .slice(0, 3);
+
+//         res.json({ suggestions });
+//     } catch (error) {
+//         console.error('Error generating suggestions:', error);
+//         res.status(500).json({ message: 'Failed to generate suggestions' });
+//     }
+// });
 
 /**
  * Validates if a reply message is valid:
